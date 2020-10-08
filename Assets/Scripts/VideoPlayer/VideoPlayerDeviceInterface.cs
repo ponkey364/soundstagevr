@@ -15,100 +15,126 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Video;
 
-public class VideoPlayerDeviceInterface : componentInterface {
+public class VideoPlayerDeviceInterface : componentInterface
+{
 
-  public string vidFilename;
-  public Renderer videoSurface;
-  public GameObject vidQuad;
-  AudioSource source;
-  MovieTexture movieTexture;
-  VideoPlayerUI vidUI;
+    public string vidFilename;
+    public Renderer videoSurface;
+    public GameObject vidQuad;
+    AudioSource source;
+    //MovieTexture movieTexture;
+    VideoPlayer videoPlayer;
+    VideoPlayerUI vidUI;
 
-  bool loading = false;
-  bool loaded = false;
-  public bool playing = false;
+    bool loading = false;
+    bool loaded = false;
+    public bool playing = false;
 
-  void Awake() {
-    source = GetComponent<AudioSource>();
-    vidUI = GetComponentInChildren<VideoPlayerUI>();
-  }
-
-  tooltips _tooltip;
-  public void Autoplay(string file, tooltips _t) {
-    videoSurface.material.SetColor("_TintColor", new Color32(0x9A, 0x9A, 0x9A, 0x80));
-    _tooltip = _t;
-    vidFilename = file;
-    togglePlay();
-    vidUI.updateControlQuad();
-    vidUI.controlQuad.SetActive(false);
-    vidUI.controlRends[0].material.SetFloat("_EmissionGain", 0f);
-  }
-
-  void Update() {
-    if (loaded && playing) {
-      if (!movieTexture.isPlaying) {
-        endPlayback();
-      }
-    }
-  }
-
-  void endPlayback() {
-    playing = false;
-    movieTexture.Stop();
-    vidQuad.SetActive(false);
-    vidUI.Reset();
-    masterControl.instance.toggleInstrumentVolume(true);
-    if (_tooltip != null) _tooltip.ToggleVideo(false);
-  }
-
-  public void togglePlay() {
-    playing = !playing;
-    if (playing) {
-      if (loaded) {
-        vidQuad.SetActive(true);
-        movieTexture.Play();
-        source.Play();
-        masterControl.instance.toggleInstrumentVolume(false);
-      } else if (!loading) StartCoroutine(movieRoutine());
-    } else if (loaded) {
-      movieTexture.Pause();
-      masterControl.instance.toggleInstrumentVolume(true);
-    }
-  }
-
-  void OnDisable() {
-    if (movieTexture != null) {
-      endPlayback();
-      videoSurface.material.mainTexture = null;
-      movieTexture = null;
-    }
-    loading = false;
-    loaded = false;
-    playing = false;
-    masterControl.instance.toggleInstrumentVolume(true);
-  }
-
-  IEnumerator movieRoutine() {
-    loading = true;
-    WWW www = new WWW("file:///" + Application.streamingAssetsPath + System.IO.Path.DirectorySeparatorChar + vidFilename);
-    movieTexture = www.GetMovieTexture();
-    while (!movieTexture.isReadyToPlay) {
-      yield return null;
+    void Awake()
+    {
+        source = GetComponent<AudioSource>();
+        vidUI = GetComponentInChildren<VideoPlayerUI>();
     }
 
-    videoSurface.material.mainTexture = movieTexture;
-    source.clip = movieTexture.audioClip;
-    if (playing) {
-      vidQuad.SetActive(true);
-
-      movieTexture.Play();
-      source.Play();
-      masterControl.instance.toggleInstrumentVolume(false);
-    } else {
-      vidQuad.SetActive(false);
+    tooltips _tooltip;
+    public void Autoplay(string file, tooltips _t)
+    {
+        videoSurface.material.SetColor("_TintColor", new Color32(0x9A, 0x9A, 0x9A, 0x80));
+        _tooltip = _t;
+        vidFilename = file;
+        togglePlay();
+        vidUI.updateControlQuad();
+        vidUI.controlQuad.SetActive(false);
+        vidUI.controlRends[0].material.SetFloat("_EmissionGain", 0f);
     }
-    loading = false;
-    loaded = true;
-  }
+
+    void Update()
+    {
+        if (loaded && playing)
+        {
+            if (!videoPlayer.isPlaying)
+            {
+                endPlayback();
+            }
+        }
+    }
+
+    void endPlayback()
+    {
+        playing = false;
+        videoPlayer.Stop();
+        vidQuad.SetActive(false);
+        vidUI.Reset();
+        masterControl.instance.toggleInstrumentVolume(true);
+        if (_tooltip != null) _tooltip.ToggleVideo(false);
+    }
+
+    public void togglePlay()
+    {
+        playing = !playing;
+        if (playing)
+        {
+            if (loaded)
+            {
+                vidQuad.SetActive(true);
+                videoPlayer.Play();
+                source.Play();
+                masterControl.instance.toggleInstrumentVolume(false);
+            }
+            else if (!loading) StartCoroutine(movieRoutine());
+        }
+        else if (loaded)
+        {
+            videoPlayer.Pause();
+            masterControl.instance.toggleInstrumentVolume(true);
+        }
+    }
+
+    void OnDisable()
+    {
+        if (videoPlayer != null)
+        {
+            endPlayback();
+            videoSurface.material.mainTexture = null;
+            videoPlayer = null;
+        }
+        loading = false;
+        loaded = false;
+        playing = false;
+        masterControl.instance.toggleInstrumentVolume(true);
+    }
+
+    IEnumerator movieRoutine()
+    {
+        loading = true;
+
+        videoPlayer.url = "file:///" + Application.streamingAssetsPath + System.IO.Path.DirectorySeparatorChar + vidFilename;
+        
+        while (!videoPlayer.isPrepared)
+        {
+            yield return null;
+        }
+
+        videoPlayer.targetMaterialRenderer = videoSurface;
+
+        videoPlayer.audioOutputMode = VideoAudioOutputMode.AudioSource;
+        videoPlayer.SetTargetAudioSource(0, source);
+
+        if (playing)
+        {
+            vidQuad.SetActive(true);
+
+            videoPlayer.Play();
+            source.Play();
+            masterControl.instance.toggleInstrumentVolume(false);
+        }
+        else
+        {
+            vidQuad.SetActive(false);
+        }
+        loading = false;
+        loaded = true;
+    }
 }
