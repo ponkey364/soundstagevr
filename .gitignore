@@ -30,3 +30,6 @@ sysinfo.txt
 *.unitypackage
 
 .vs/
+
+Assets/SteamVR/InteractionSystem/Samples
+*.pdf
