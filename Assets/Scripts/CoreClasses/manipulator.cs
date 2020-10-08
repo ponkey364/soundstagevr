@@ -173,8 +173,10 @@ public class manipulator : MonoBehaviour {
   }
 
   public void hapticPulse(ushort hapticPower = 750) {
-    if (masterControl.instance.currentPlatform == masterControl.platform.Vive) SteamVR_Controller.Input(controllerIndex).TriggerHapticPulse(hapticPower);
-    else if (masterControl.instance.currentPlatform == masterControl.platform.Oculus) bigHaptic(hapticPower, .05f);
+        const float hapticDuration = .05f;
+        SteamVR_Actions.default_Haptic.Execute(0.0f, hapticDuration, 30, hapticPower/1000, SteamVR_Input_Sources.Any);
+    //if (masterControl.instance.currentPlatform == masterControl.platform.Vive) SteamVR_Controller.Input(controllerIndex).TriggerHapticPulse(hapticPower);
+    //else if (masterControl.instance.currentPlatform == masterControl.platform.Oculus) bigHaptic(hapticPower, .05f);
   }
 
   Coroutine _hapticCoroutine;
@@ -331,7 +333,7 @@ public class manipulator : MonoBehaviour {
 
   void updateProngs() {
     float val = 0;
-    if (masterControl.instance.currentPlatform == masterControl.platform.Vive) val = SteamVR_Controller.Input(controllerIndex).GetAxis(EVRButtonId.k_EButton_Axis1).x;
+    //if (masterControl.instance.currentPlatform == masterControl.platform.Vive) val = SteamVR_Controller.Input(controllerIndex).GetAxis(EVRButtonId.k_EButton_Axis1).x;
 
     if (!usingOculus) {
       triggerTrans.localRotation = Quaternion.Euler(Mathf.Lerp(0, 45, val), 180, 0);
@@ -378,51 +380,55 @@ public class manipulator : MonoBehaviour {
 
   bool touchpadActive = false;
   public void viveTouchpadUpdate() {
-    bool tOn = SteamVR_Controller.Input(controllerIndex).GetTouchDown(SteamVR_Controller.ButtonMask.Touchpad);
-    bool tOff = SteamVR_Controller.Input(controllerIndex).GetTouchUp(SteamVR_Controller.ButtonMask.Touchpad);
+    //bool tOn = SteamVR_Controller.Input(controllerIndex).GetTouchDown(SteamVR_Controller.ButtonMask.Touchpad);
+    //bool tOff = SteamVR_Controller.Input(controllerIndex).GetTouchUp(SteamVR_Controller.ButtonMask.Touchpad);
 
-    bool pOn = SteamVR_Controller.Input(controllerIndex).GetPressDown(SteamVR_Controller.ButtonMask.Touchpad);
-    bool pOff = SteamVR_Controller.Input(controllerIndex).GetPressUp(SteamVR_Controller.ButtonMask.Touchpad);
+    //bool pOn = SteamVR_Controller.Input(controllerIndex).GetPressDown(SteamVR_Controller.ButtonMask.Touchpad);
+    //bool pOff = SteamVR_Controller.Input(controllerIndex).GetPressUp(SteamVR_Controller.ButtonMask.Touchpad);
 
-    bool activeManipObj = (grabbing && selectedObject != null);
+    //bool activeManipObj = (grabbing && selectedObject != null);
 
-    if (tOn) {
-      touchpadActive = true;
-      if (controllerVisible) _touchpad.setTouch(true);
-      if (activeManipObj) selectedObject.setTouch(true);
-    }
-    if (tOff) {
-      touchpadActive = false;
-      if (controllerVisible) _touchpad.setTouch(false);
-      if (activeManipObj) selectedObject.setTouch(false);
-    }
+    //if (tOn) {
+    //  touchpadActive = true;
+    //  if (controllerVisible) _touchpad.setTouch(true);
+    //  if (activeManipObj) selectedObject.setTouch(true);
+    //}
+    //if (tOff) {
+    //  touchpadActive = false;
+    //  if (controllerVisible) _touchpad.setTouch(false);
+    //  if (activeManipObj) selectedObject.setTouch(false);
+    //}
 
-    if (!touchpadActive) return;
+    //if (!touchpadActive) return;
 
-    Vector2 pos = SteamVR_Controller.Input(controllerIndex).GetAxis();
-    if (controllerVisible) _touchpad.updateTouchPos(pos);
-    if (activeManipObj) selectedObject.updateTouchPos(pos);
+    //Vector2 pos = SteamVR_Controller.Input(controllerIndex).GetAxis();
+    //if (controllerVisible) _touchpad.updateTouchPos(pos);
+    //if (activeManipObj) selectedObject.updateTouchPos(pos);
 
-    if (pOn) {
+    //if (pOn) {
 
-      if (controllerVisible) _touchpad.setPress(true);
-      if (activeManipObj) selectedObject.setPress(true);
-    }
+    //  if (controllerVisible) _touchpad.setPress(true);
+    //  if (activeManipObj) selectedObject.setPress(true);
+    //}
 
-    if (pOff) {
-      if (controllerVisible) _touchpad.setPress(false);
-      if (activeManipObj) selectedObject.setPress(false);
-    }
+    //if (pOff) {
+    //  if (controllerVisible) _touchpad.setPress(false);
+    //  if (activeManipObj) selectedObject.setPress(false);
+    //}
   }
 
   void secondaryOculusButtonUpdate() {
     bool secondaryDown = false;
     bool secondaryUp = false;
 
+        secondaryDown = SteamVR_Actions._default.GrabPinch[SteamVR_Input_Sources.LeftHand].state;//.GrabPinch.state;
+
     if (masterControl.instance.currentPlatform == masterControl.platform.Vive) {
-      secondaryDown = SteamVR_Controller.Input(controllerIndex).GetPressDown(SteamVR_Controller.ButtonMask.ApplicationMenu);
-      secondaryUp = SteamVR_Controller.Input(controllerIndex).GetPressUp(SteamVR_Controller.ButtonMask.ApplicationMenu);
-    }
+            secondaryDown = SteamVR_Actions._default.SnapTurnLeft.stateDown; // until I can actually get it to generate again properly
+            secondaryUp = SteamVR_Actions._default.SnapTurnLeft.stateUp;
+            //secondaryDown = SteamVR_Controller.Input(controllerIndex).GetPressDown(SteamVR_Controller.ButtonMask.ApplicationMenu);
+            //secondaryUp = SteamVR_Controller.Input(controllerIndex).GetPressUp(SteamVR_Controller.ButtonMask.ApplicationMenu);
+        }
 
     if (controllerVisible) {
       if (secondaryDown) {
@@ -450,17 +456,18 @@ public class manipulator : MonoBehaviour {
     bool triggerButtonDown, triggerButtonUp, menuButtonDown;
 
     if (masterControl.instance.currentPlatform == masterControl.platform.Vive) {
-      triggerButtonDown = SteamVR_Controller.Input(controllerIndex).GetPressDown(SteamVR_Controller.ButtonMask.Trigger);
-      triggerButtonUp = SteamVR_Controller.Input(controllerIndex).GetPressUp(SteamVR_Controller.ButtonMask.Trigger);
+      triggerButtonDown = SteamVR_Actions._default.GrabPinch.stateDown;
+      triggerButtonUp = SteamVR_Actions._default.GrabPinch.stateUp;
 
       if (!usingOculus) {
         viveTouchpadUpdate();
-        menuButtonDown = SteamVR_Controller.Input(controllerIndex).GetPressDown(SteamVR_Controller.ButtonMask.ApplicationMenu);
+        //menuButtonDown = SteamVR_Controller.Input(controllerIndex).GetPressDown(SteamVR_Controller.ButtonMask.ApplicationMenu);
       } else {
-        Vector2 pos = SteamVR_Controller.Input(controllerIndex).GetAxis();
+                //Vector2 _pos = SteamVR_Actions._default.SkeletonLeftHand.localPosition; //SteamVR_Input_Sources.RightHand.
+        Vector2 pos = SteamVR_Actions._default.SkeletonLeftHand.localPosition;
         if (grabbing && selectedObject != null) selectedObject.updateTouchPos(pos);
         secondaryOculusButtonUpdate();
-        menuButtonDown = SteamVR_Controller.Input(controllerIndex).GetPressDown(EVRButtonId.k_EButton_A);
+        //menuButtonDown = SteamVR_Controller.Input(controllerIndex).GetPressDown(EVRButtonId.k_EButton_A);
       }
     } else {
       triggerButtonDown = triggerButtonUp = menuButtonDown = false;
@@ -479,7 +486,7 @@ public class manipulator : MonoBehaviour {
       SetTrigger(false);
     }
 
-    if (menuButtonDown) _menuspawn.togglePad();
+    //if (menuButtonDown) _menuspawn.togglePad();
 
     if (grabbing && selectedObject != null) selectedObject.grabUpdate(transform);
     else if (selectedObject != null) selectedObject.selectUpdate(transform);
