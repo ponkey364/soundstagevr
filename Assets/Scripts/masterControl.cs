@@ -141,7 +141,7 @@ public class masterControl : MonoBehaviour {
   public void setGlowLevel(float t) {
     glowVal = t;
     PlayerPrefs.SetFloat("glowVal", glowVal);
-    mainGlowShader.bloomIntensity = Mathf.Lerp(0, .05f, t);
+    //mainGlowShader.bloomIntensity = Mathf.Lerp(0, .05f, t);
   }
 
   public bool tooltipsOn = true;
